@@ -35,7 +35,7 @@ interface HomeProps {
 export default function Home({
   postsPagination,
   preview,
-}: HomeProps): ReactElement {
+}: HomeProps) {
   const formattedPost = postsPagination.results.map(post => {
     return {
       ...post,

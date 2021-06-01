@@ -1,16 +1,19 @@
+
 import { GetStaticPaths, GetStaticProps } from 'next';
-import { getPrismicClient } from '../../services/prismic';
+import { format } from 'date-fns';
+import { RichText } from 'prismic-dom';
+import { FiCalendar, FiClock, FiUser } from 'react-icons/fi';
+import { ptBR } from 'date-fns/locale';
 import { useRouter } from 'next/router';
 import Prismic from '@prismicio/client';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { FiCalendar, FiClock, FiUser } from 'react-icons/fi';
-import { RichText } from 'prismic-dom';
+import Link from 'next/link';
+import Header from '../../components/Header';
+
+import { getPrismicClient } from '../../services/prismic';
 
 import commonStyles from '../../styles/common.module.scss';
 import styles from './post.module.scss';
-import Header from '../../components/Header';
-import Link from 'next/link';
+import Comments from '../../components/Comments';
 
 interface Post {
   first_publication_date: string | null;
@@ -49,9 +52,12 @@ interface PostProps {
   preview: boolean;
 }
 
-export default function Post({ post, navigation, preview }: PostProps) {
+export default function Post({
+  post,
+  navigation,
+  preview,
+}: PostProps): JSX.Element {
   const router = useRouter();
-
   if (router.isFallback) {
     return <h1>Carregando...</h1>;
   }
@@ -148,6 +154,8 @@ export default function Post({ post, navigation, preview }: PostProps) {
           )}
         </section>
 
+        <Comments />
+
         {preview && (
           <aside>
             <Link href="/api/exit-preview">
@@ -185,17 +193,14 @@ export const getStaticProps: GetStaticProps = async ({
   preview = false,
   previewData,
 }) => {
-  const { slug } = params;
-
   const prismic = getPrismicClient();
-
+  const { slug } = params;
   const response = await prismic.getByUID('posts', String(slug), {
     ref: previewData?.ref || null,
   });
 
   const prevPost = await prismic.query(
     [Prismic.Predicates.at('document.type', 'posts')],
-
     {
       pageSize: 1,
       after: response.id,
@@ -231,8 +236,6 @@ export const getStaticProps: GetStaticProps = async ({
       }),
     },
   };
-
-  console.log(JSON.stringify(response, null, 2));
 
   return {
     props: {
